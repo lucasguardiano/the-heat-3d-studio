@@ -11,6 +11,22 @@
 <h2>AMBIENTES</h2><select id="rooms"><option value="all">Todos os ambientes</option><option value="atendimento">Atendimento</option><option value="salao">Salão</option><option value="cozinha">Cozinha</option><option value="deck">Deck / pergolado</option><option value="banheiros">Banheiros e circulação</option></select>
 <h2>PROJETO</h2><div class="buttons"><button id="save">Salvar no aparelho</button><button id="load">Abrir projeto</button><button id="export">Exportar JSON</button><button id="reset">Restaurar base</button></div><input type="file" id="file" accept=".json,application/json" hidden>
 <p class="foot">Modelo de estudo, não utilizar para execução de obra. A distribuição segue a planta Borelli de 2021, mas as dimensões e aberturas precisam ser conferidas. O salvamento local depende do navegador; exporte JSON como cópia de segurança.</p></aside></div>
+<script>
+window.__heat3dReady=false;
+window.addEventListener('error',function(e){document.getElementById('diag').textContent='Erro: '+(e.message||'falha no script')});
+window.addEventListener('unhandledrejection',function(e){document.getElementById('diag').textContent='Erro ao carregar: '+String(e.reason?.message||e.reason)});
+window.addEventListener('load',function(){setTimeout(function(){
+if(window.__heat3dReady)return;
+var view=document.getElementById('view'),diag=document.getElementById('diag');
+diag.textContent='Modo planta 2D: o motor 3D não iniciou neste navegador.';
+if(view.querySelector('canvas'))view.querySelector('canvas').style.display='none';
+var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 420 490');svg.setAttribute('preserveAspectRatio','xMidYMid meet');svg.style.cssText='position:absolute;inset:0;width:100%;height:100%;background:#dfe7eb;touch-action:auto';
+var rooms=[['DECK / PERGOLADO',10,20,125,380,'#c9aa87'],['SALÃO',143,20,120,145,'#e9dcd0'],['ATENDIMENTO',143,172,120,228,'#f1e2d6'],['WC FEM.',270,20,66,85,'#bcd4dc'],['WC PNE / MASC.',343,20,66,85,'#bcd4dc'],['CIRCULAÇÃO',270,113,139,75,'#d5dce0'],['COZINHA',270,195,139,205,'#c4ccd0']];
+rooms.forEach(function(a){var rect=document.createElementNS('http://www.w3.org/2000/svg','rect');rect.setAttribute('x',a[1]);rect.setAttribute('y',a[2]);rect.setAttribute('width',a[3]);rect.setAttribute('height',a[4]);rect.setAttribute('fill',a[5]);rect.setAttribute('stroke','#53616a');rect.setAttribute('stroke-width','3');svg.appendChild(rect);var t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',a[1]+a[3]/2);t.setAttribute('y',a[2]+a[4]/2);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','10');t.setAttribute('font-family','Arial');t.setAttribute('font-weight','bold');t.setAttribute('fill','#29333c');t.textContent=a[0];svg.appendChild(t)});
+view.appendChild(svg);
+},3500)});
+</script>
+<div id="diag" style="position:fixed;bottom:8px;left:8px;z-index:30;background:#192330ed;color:#fff;padding:7px 10px;border-radius:7px;font:11px system-ui;max-width:75vw">Carregando motor 3D…</div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -82,6 +98,6 @@ document.getElementById('export').onclick=()=>{const a=document.createElement('a
 document.getElementById('reset').onclick=()=>{if(confirm('Restaurar o modelo inicial? Alterações não salvas serão perdidas.'))restore(defs.map(d=>({name:d[0],room:d[1],type:d[2],x:d[3],y:d[4],z:d[5],w:d[6],h:d[7],d:d[8],color:d[9]})))};
 document.getElementById('file').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());restore(j.objects||j)}catch(x){alert('Arquivo inválido: '+x.message)}};
 window.addEventListener('resize',()=>{let w=view.clientWidth,h=view.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)});
-init();renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
+init();renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});window.__heat3dReady=true;document.getElementById('diag').textContent='Motor 3D carregado';setTimeout(()=>document.getElementById('diag').remove(),3500);
 }catch(e){fail(e)}
 </script></body></html>
