@@ -2,7 +2,7 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>The Heat 3D Studio</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#10151b;color:#f4f5f6;font:14px system-ui,-apple-system,Arial}header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#181f28;border-bottom:1px solid #34404d}h1{font-size:17px;margin:0}h1 span{color:#ff5559}.tag{font-size:11px;color:#f5b8b8;background:#542b31;border-radius:20px;padding:5px 9px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;height:calc(100dvh - 54px)}#view{position:relative;min-width:0;min-height:350px;touch-action:none}canvas{display:block;width:100%;height:100%}.hint{position:absolute;left:12px;top:12px;background:#18212cdb;border-radius:9px;padding:10px;pointer-events:none;max-width:290px;font-size:12px;color:#d4dde8}#error{display:none;position:absolute;inset:20%;background:#342328;color:#fff;padding:18px;border-radius:12px;z-index:5}aside{padding:16px;background:#1a222c;overflow:auto;border-left:1px solid #34404d}h2{font-size:12px;letter-spacing:1.3px;color:#a8b4c4;margin:18px 0 9px}button,select,input{font:inherit}button{background:#303d4b;border:1px solid #526171;border-radius:8px;color:white;padding:10px;cursor:pointer}button:active{background:#a63e42}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wide{width:100%}label{display:block;margin:10px 0 5px;color:#cbd3dd}input[type=color]{width:100%;height:38px;border:0;background:none}input[type=number],select{background:#293441;border:1px solid #526171;border-radius:7px;padding:9px;color:white;width:100%}.small{font-size:12px;color:#aab8c7;line-height:1.5}.selected{background:#26323e;padding:10px;border-radius:8px}.foot{font-size:11px;color:#9faab7;margin-top:18px}a{color:#ff9a9c}@media(max-width:760px){.layout{display:flex;flex-direction:column;height:auto}#view{height:55dvh;min-height:340px}aside{border-left:0;border-top:1px solid #34404d}header{padding:12px}.hint{font-size:11px}}
-</style></head><body><header><h1>THE HEAT <span>3D STUDIO</span></h1><span class="tag">ALPHA · ESTRUTURA BLOQUEADA</span></header>
+</style></head><body><header><h1>THE HEAT <span>3D STUDIO</span></h1><span class="tag">ALPHA · PLANTA BORELLI 2021</span></header>
 <div class="layout"><main id="view"><div class="hint">Arraste o fundo para girar · Pinça/roda para zoom · Toque num objeto para selecionar · Modo mover: arraste o objeto</div><div id="error"></div></main>
 <aside><div class="buttons"><button id="iso">Vista 3D</button><button id="top">Planta ↑</button><button id="center">Recentralizar</button><button id="move">Mover: desligado</button></div>
 <h2>ELEMENTO SELECIONADO</h2><div class="selected"><strong id="selectedName">Nenhum</strong><div id="selectedType" class="small">Toque em um móvel ou parede</div></div>
@@ -10,7 +10,7 @@
 <h2>ADICIONAR ELEMENTOS</h2><div class="buttons"><button data-add="Mesa">Mesa</button><button data-add="Cadeira">Cadeira</button><button data-add="Equipamento">Equipamento</button><button data-add="Balcão">Balcão</button><button data-add="Parede">Painel móvel</button><button data-add="Decoração">Decoração</button></div>
 <h2>AMBIENTES</h2><select id="rooms"><option value="all">Todos os ambientes</option><option value="atendimento">Atendimento</option><option value="salao">Salão</option><option value="cozinha">Cozinha</option><option value="deck">Deck / pergolado</option><option value="banheiros">Banheiros e circulação</option></select>
 <h2>PROJETO</h2><div class="buttons"><button id="save">Salvar no aparelho</button><button id="load">Abrir projeto</button><button id="export">Exportar JSON</button><button id="reset">Restaurar base</button></div><input type="file" id="file" accept=".json,application/json" hidden>
-<p class="foot">Modelo de estudo, não utilizar para execução de obra. As áreas e pé-direitos foram identificados na planta Borelli de 2021. O formato dos ambientes, a posição das paredes, portas e janelas ainda são estimativas e precisam ser conferidos na planta original. Estrutura bloqueada para edição. O salvamento local depende do navegador; exporte JSON como cópia de segurança.</p></aside></div>
+<p class="foot">Modelo de estudo, não utilizar para execução de obra. Reconstrução baseada no PDF original Borelli (2021), com perímetro, disposição de ambientes e vãos principais. As posições de algumas aberturas e elementos não cotados continuam aproximadas. Estrutura bloqueada para edição. Não utilizar como projeto executivo. O salvamento local depende do navegador; exporte JSON como cópia de segurança.</p></aside></div>
 <script>
 window.__heat3dReady=false;
 window.addEventListener('error',function(e){document.getElementById('diag').textContent='Erro: '+(e.message||'falha no script')});
@@ -33,67 +33,80 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const view=document.getElementById('view'),err=document.getElementById('error');
 let renderer,scene,camera,controls,raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2(),selected=null,moveMode=false,dragging=false,objects=[],counter=0;
-const STORE='theheat3dstudio-alpha-02';
+const STORE='theheat3dstudio-alpha-03';
 function fail(e){err.style.display='block';err.textContent='Não foi possível iniciar o 3D neste navegador. Abra o endereço publicado no Safari ou Chrome atualizado. Detalhe: '+String(e?.message||e)}
 try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(view.clientWidth,view.clientHeight);renderer.shadowMap.enabled=true;renderer.outputColorSpace=THREE.SRGBColorSpace;view.prepend(renderer.domElement);
-scene=new THREE.Scene();scene.background=new THREE.Color('#d5e1e7');camera=new THREE.PerspectiveCamera(50,view.clientWidth/view.clientHeight,.1,200);camera.position.set(15,18,20);
-controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(4.9,0,4.6);controls.maxPolarAngle=Math.PI/2.02;controls.minDistance=3;controls.maxDistance=55;controls.update();
+scene=new THREE.Scene();scene.background=new THREE.Color('#d5e1e7');camera=new THREE.PerspectiveCamera(50,view.clientWidth/view.clientHeight,.1,200);camera.position.set(19,21,23);
+controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(7,0,4.7);controls.maxPolarAngle=Math.PI/2.02;controls.minDistance=3;controls.maxDistance=55;controls.update();
 scene.add(new THREE.HemisphereLight(0xffffff,0x7e8b9a,2));const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(5,18,10);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-20;sun.shadow.camera.right=20;sun.shadow.camera.top=20;sun.shadow.camera.bottom=-20;scene.add(sun);
 const grid=new THREE.GridHelper(30,30,0x8899aa,0xb4c1ca);grid.position.y=-.025;scene.add(grid);
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:'#e3e9eb',roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.set(4, -.04,4);ground.receiveShadow=true;scene.add(ground);
-const defs=[
-['Deck / pergolado · 19,54 m²','deck','floor',1.45,0,5.2,2.9,.08,6.74,'#c8ab89'],
-['Rampa','deck','floor',1.45,0,0.7,2.9,.08,1.4,'#b8b8b4'],
-['Hall de entrada','salao','floor',3.15,0,1.3,.55,.08,1.8,'#ddd6c8'],
-['Salão · 17,47 m²','salao','floor',5.1,0,1.65,4.4,.08,3.97,'#d8d3c5'],
-['Atendimento · 23,18 m²','atendimento','floor',5.1,0,5.55,4.4,.08,5.27,'#e8ded0'],
-['Circulação · 4,45 m²','banheiros','floor',8.4,0,3.55,2.95,.08,1.51,'#d9dfe2'],
-['WC feminino · 3,37 m²','banheiros','floor',7.65,0,1.65,1.45,.08,2.32,'#b7d1d8'],
-['WC acessível / masculino · 3,56 m²','banheiros','floor',9.1,0,1.65,1.45,.08,2.46,'#b7d1d8'],
-['Cozinha · 13,99 m²','cozinha','floor',9.1,0,7.35,3.4,.08,4.11,'#d0d3d5'],
-['Corredor externo','deck','floor',6.95,0,10.7,6.7,.08,.75,'#bbc4c6'],
-['Parede salão esquerda','salao','wall',3.25,1.35,1.65,.15,2.7,3.3,'#f5f4f0'],
-['Parede salão superior','salao','wall',5.1,1.35,0,3.65,2.7,.15,'#f5f4f0'],
-['Divisória salão/atendimento','atendimento','wall',5.15,1.35,3.35,3.6,2.7,.12,'#f5f4f0'],
-['Parede direita salão','salao','wall',6.95,1.35,1.65,.12,2.7,3.3,'#f5f4f0'],
-['Parede externa atendimento','atendimento','wall',3.25,1.35,7.25,.15,2.7,5.45,'#f5f4f0'],
-['Parede atendimento/cozinha','cozinha','wall',6.95,1.35,7.4,.12,2.7,4,'#f5f4f0'],
-['Parede cozinha direita','cozinha','wall',10.55,1.35,7.4,.12,2.7,4,'#f5f4f0'],
-['Parede cozinha inferior','cozinha','wall',9.1,1.35,9.4,2.95,2.7,.12,'#f5f4f0'],
-['Parede banheiros superior','banheiros','wall',8.45,1.35,.65,3.05,2.7,.12,'#f5f4f0'],
-['Divisória banheiros','banheiros','wall',8.4,1.35,1.65,.12,2.7,2,'#f5f4f0'],
-['Parede banheiros inferior','banheiros','wall',8.45,1.35,2.65,3.05,2.7,.12,'#f5f4f0'],
-['Balcão provisório','atendimento','furniture',4.65,.5,7.8,2.2,1,.65,'#a83d40'],
-['Expositor provisório','atendimento','furniture',5.95,.65,6.7,1.5,1.3,.7,'#bfc4c7'],
-['Bancada atendimento','atendimento','furniture',4.6,.45,9.1,2.3,.9,.65,'#b7c1c7'],
-['Mesa salão','salao','furniture',5.5,.4,1.65,.8,.8,.8,'#a7a7a1'],
-['Mesa deck 1','deck','furniture',1.4,.4,2.8,.8,.8,.8,'#a7a7a1'],
-['Mesa deck 2','deck','furniture',1.4,.4,4.4,.8,.8,.8,'#a7a7a1'],
-['Mesa deck 3','deck','furniture',1.4,.4,6.1,.8,.8,.8,'#a7a7a1'],
-['Mesa deck 4','deck','furniture',1.4,.4,7.7,.8,.8,.8,'#a7a7a1'],
-['Pilar pergolado 1','deck','wall',.15,1.4,2.1,.15,2.8,.15,'#303339'],
-['Pilar pergolado 2','deck','wall',.15,1.4,5.3,.15,2.8,.15,'#303339'],
-['Pilar pergolado 3','deck','wall',.15,1.4,8.3,.15,2.8,.15,'#303339'],
-['Balcão The Heat · retirada','atendimento','furniture',4.1,.5075,6.55,1.2,1.015,.65,'#c82f3b'],
-['Balcão The Heat · cookies','atendimento','furniture',5.3,.5075,6.55,1.2,1.015,.65,'#f3f1eb'],
-['Balcão The Heat · caixa','atendimento','furniture',6.5,.6075,6.55,1.2,1.215,.65,'#c82f3b'],
-['Expositor cookies · estudo','atendimento','furniture',5.3,1.21,6.55,.9,.4,.43,'#d5b99b'],
-['Bancada cozinha 1','cozinha','furniture',8.15,.45,8.8,1.7,.9,.65,'#aebbc2'],
-['Equipamento cozinha 1','cozinha','furniture',9.8,.8,6.4,1,1.6,.8,'#b9c4ca'],
-['Equipamento cozinha 2','cozinha','furniture',9.7,.6,8.4,1.2,1.2,.7,'#aebbc2']
-];
+// Planta Borelli, folha 01/07, 14/09/2021. Traçado reconstruído a partir das cotas e posições do desenho.
+// X/Z em metros. A estrutura é somente leitura; confirmar cotas locais antes de executar obra.
+const defs=[];
+const floor=(n,r,x1,z1,x2,z2,c)=>defs.push([n,r,'floor',(x1+x2)/2,0,(z1+z2)/2,x2-x1,.08,z2-z1,c]);
+const wall=(n,r,x1,z1,x2,z2,h=2.93,c='#f4f3f0')=>{const len=Math.hypot(x2-x1,z2-z1);const horizontal=Math.abs(x2-x1)>=Math.abs(z2-z1);defs.push([n,r,'wall',(x1+x2)/2,h/2,(z1+z2)/2,horizontal?len:.14,h,horizontal?.14:len,c])};
+const item=(n,r,x,z,w,h,d,c)=>defs.push([n,r,'furniture',x,h/2,z,w,h,d,c]);
+// Referência: extremidade esquerda do deck = X0; alinhamento superior = Z0.
+floor('Deck / pergolado · 19,54 m²','deck',0,1.78,2.90,9.47,'#c6a784');
+floor('Rampa de acesso','deck',0,0,2.90,1.78,'#b8bab6');
+floor('Hall de entrada','salao',2.90,0,4.70,1.78,'#ddd6c8');
+floor('Salão · 17,47 m²','salao',4.70,0,9.89,3.35,'#e2d7c8');
+floor('Atendimento · 23,18 m²','atendimento',4.70,3.35,9.89,8.38,'#e8d8c8');
+floor('WC feminino · 3,37 m²','banheiros',9.89,1.10,11.44,3.27,'#bcd3d9');
+floor('WC PNE / masculino · 3,56 m²','banheiros',11.44,1.10,13.08,3.27,'#bcd3d9');
+floor('Circulação · 4,45 m²','banheiros',9.89,3.27,13.88,4.45,'#d7dce0');
+floor('Cozinha · 13,99 m²','cozinha',9.89,4.55,13.88,8.38,'#c8d0d3');
+floor('Corredor lateral externo','deck',4.70,8.50,13.88,9.65,'#bbc3c6');
+// Salão: parede externa e grande fechamento envidraçado PC360 no lado esquerdo.
+wall('Salão · parede superior','salao',4.70,0,9.89,0,2.16);
+wall('Salão · vidro frontal PC360 (3,60 m)','salao',4.70,.18,4.70,3.20,2.15,'#8eb9c3');
+wall('Salão · divisória com atendimento','salao',4.70,3.35,9.89,3.35,2.16);
+// Divisão com sanitários, circulação e cozinha, preservando vãos indicados.
+wall('Salão · parede direita','salao',9.89,0,9.89,3.35,2.16);
+wall('Atendimento · fechamento lateral','atendimento',4.70,3.35,4.70,8.38);
+wall('Atendimento · parede inferior','atendimento',4.70,8.38,9.89,8.38);
+wall('Atendimento · parede direita superior','atendimento',9.89,3.35,9.89,3.93);
+wall('Atendimento · parede direita inferior','atendimento',9.89,4.98,9.89,8.38);
+// WC: divisórias, parede externa e vãos de portas existentes PE.
+wall('Sanitários · parede superior','banheiros',9.89,1.10,13.08,1.10,2.95);
+wall('Sanitários · lateral esquerda','banheiros',9.89,1.10,9.89,3.27,2.95);
+wall('Sanitários · divisória central','banheiros',11.44,1.10,11.44,3.27,2.95);
+wall('Sanitários · lateral direita','banheiros',13.08,1.10,13.08,3.27,2.95);
+wall('WC feminino · trecho parede','banheiros',9.89,3.27,10.15,3.27,2.95);
+wall('WC feminino · trecho parede 2','banheiros',11.05,3.27,11.44,3.27,2.95);
+wall('WC PNE · trecho parede','banheiros',11.44,3.27,11.64,3.27,2.95);
+wall('WC PNE · trecho parede 2','banheiros',12.54,3.27,13.08,3.27,2.95);
+wall('Circulação · parede superior','banheiros',13.08,3.27,13.88,3.27);
+wall('Circulação · acesso restrito','banheiros',13.88,3.27,13.88,3.58);
+wall('Circulação · acesso restrito 2','banheiros',13.88,4.45,13.88,4.55);
+// Cozinha com vão de acesso P100 no lado esquerdo e porta P90 ao depósito no lado direito.
+wall('Cozinha · parede superior','cozinha',9.89,4.55,13.88,4.55);
+wall('Cozinha · parede direita superior','cozinha',13.88,4.55,13.88,5.40);
+wall('Cozinha · parede direita inferior','cozinha',13.88,6.30,13.88,8.38);
+wall('Cozinha · parede inferior','cozinha',9.89,8.38,13.88,8.38);
+wall('Cozinha · parede esquerda superior','cozinha',9.89,4.55,9.89,5.30);
+wall('Cozinha · parede esquerda inferior','cozinha',9.89,6.30,9.89,8.38);
+// Pilares do pergolado. O restante da estrutura é indicado sem fechamento do deck.
+item('Pilar pergolado · frente 1','deck',.08,1.78,.16,2.8,.16,'#343a40');
+item('Pilar pergolado · frente 2','deck',.08,9.30,.16,2.8,.16,'#343a40');
+// Elementos de estudo do layout original: não representam equipamentos finais da The Heat.
+item('Balcão original Borelli · referência','atendimento',6.25,5.75,2.2,1.0,.65,'#b7bdc0');
+item('Expositor Borelli · referência','atendimento',8.25,6.55,1.5,1.1,.65,'#b6c0c5');
+item('Bancada cozinha · referência','cozinha',12.5,7.90,1.7,.9,.6,'#b6c0c5');
+
 function add(name,room,type,x,y,z,w,h,d,color){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.74,metalness:type==='furniture'?.18:0}));mesh.position.set(x,y,z);mesh.castShadow=type!=='floor';mesh.receiveShadow=true;mesh.userData={id:++counter,name,room,type,w,h,d};scene.add(mesh);objects.push(mesh);return mesh}
 function init(){defs.forEach(d=>add(...d));}
 function snapshot(){return objects.map(o=>({name:o.userData.name,room:o.userData.room,type:o.userData.type,x:o.position.x,y:o.position.y,z:o.position.z,w:o.userData.w,h:o.userData.h,d:o.userData.d,color:'#'+o.material.color.getHexString(),rotation:o.rotation.y}))}
 function restore(data){if(!Array.isArray(data))throw Error('Formato inválido');objects.forEach(o=>{scene.remove(o);o.geometry.dispose();o.material.dispose()});objects=[];selected=null;counter=0;data.forEach(o=>{if(!o||!['floor','wall','furniture'].includes(o.type))return;let m=add(o.name,o.room,o.type,+o.x,+o.y,+o.z,+o.w,+o.h,+o.d,o.color);m.rotation.y=+o.rotation||0});updateSelected()}
 function updateSelected(){document.getElementById('selectedName').textContent=selected?.userData.name||'Nenhum';document.getElementById('selectedType').textContent=selected?selected.userData.type+' · '+selected.userData.room:'Toque em um móvel ou parede';if(selected){document.getElementById('color').value='#'+selected.material.color.getHexString();document.getElementById('color').disabled=selected.userData.type!=='furniture';document.getElementById('rotate').disabled=selected.userData.type!=='furniture';document.getElementById('delete').disabled=selected.userData.type!=='furniture'}else{document.getElementById('color').disabled=true;document.getElementById('rotate').disabled=true;document.getElementById('delete').disabled=true}}
 function pick(e){const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);return raycaster.intersectObjects(objects).find(i=>i.object.visible&&i.object.userData.type!=='floor')?.object||null}
-let startX=0,startY=0;renderer.domElement.addEventListener('pointerdown',e=>{startX=e.clientX;startY=e.clientY;if(moveMode){const hit=pick(e);if(hit){selected=hit;if(hit.userData.type!=='furniture'){updateSelected();return}dragging=true;controls.enabled=false;updateSelected();renderer.domElement.setPointerCapture(e.pointerId)}}});
+let startX=0,startY=0;renderer.domElement.addEventListener('pointerdown',e=>{startX=e.clientX;startY=e.clientY;if(moveMode){const hit=pick(e);if(hit){selected=hit;if(hit.userData.type!=='furniture'||hit.userData.name.startsWith('Pilar')){updateSelected();return}dragging=true;controls.enabled=false;updateSelected();renderer.domElement.setPointerCapture(e.pointerId)}}});
 renderer.domElement.addEventListener('pointermove',e=>{if(!dragging||!selected)return;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);const p=new THREE.Vector3();if(raycaster.ray.intersectPlane(plane,p)){selected.position.x=p.x;selected.position.z=p.z}});
 renderer.domElement.addEventListener('pointerup',e=>{if(dragging){dragging=false;controls.enabled=true;return}if(Math.hypot(e.clientX-startX,e.clientY-startY)<9){selected=pick(e);updateSelected()}});
-document.getElementById('iso').onclick=()=>{camera.position.set(15,18,20);controls.target.set(5,0,5);controls.update()};
-document.getElementById('top').onclick=()=>{camera.position.set(5,22,5.01);controls.target.set(5,0,5);controls.update()};
-document.getElementById('center').onclick=()=>{controls.target.set(5,0,5);camera.position.set(15,18,20);controls.update()};
+document.getElementById('iso').onclick=()=>{camera.position.set(15,18,20);controls.target.set(7,0,4.7);controls.update()};
+document.getElementById('top').onclick=()=>{camera.position.set(7,24,4.71);controls.target.set(7,0,4.7);controls.update()};
+document.getElementById('center').onclick=()=>{controls.target.set(7,0,4.7);camera.position.set(15,18,20);controls.update()};
 document.getElementById('move').onclick=e=>{moveMode=!moveMode;e.target.textContent='Mover: '+(moveMode?'ligado':'desligado');e.target.style.background=moveMode?'#a43b43':''};
 document.getElementById('color').oninput=e=>{if(selected&&selected.userData.type==='furniture')selected.material.color.set(e.target.value)};
 document.getElementById('rotate').onclick=()=>{if(selected&&selected.userData.type==='furniture')selected.rotation.y+=Math.PI/2};
