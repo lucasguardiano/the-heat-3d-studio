@@ -2,10 +2,10 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>The Heat 3D Studio</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#10151b;color:#f4f5f6;font:14px system-ui,-apple-system,Arial}header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#181f28;border-bottom:1px solid #34404d}h1{font-size:17px;margin:0}h1 span{color:#ff5559}.tag{font-size:11px;color:#f5b8b8;background:#542b31;border-radius:20px;padding:5px 9px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;height:calc(100dvh - 54px)}#view{position:relative;min-width:0;min-height:350px;touch-action:none}canvas{display:block;width:100%;height:100%}.hint{position:absolute;left:12px;top:12px;background:#18212cdb;border-radius:9px;padding:10px;pointer-events:none;max-width:290px;font-size:12px;color:#d4dde8}#error{display:none;position:absolute;inset:20%;background:#342328;color:#fff;padding:18px;border-radius:12px;z-index:5}aside{padding:16px;background:#1a222c;overflow:auto;border-left:1px solid #34404d}h2{font-size:12px;letter-spacing:1.3px;color:#a8b4c4;margin:18px 0 9px}button,select,input{font:inherit}button{background:#303d4b;border:1px solid #526171;border-radius:8px;color:white;padding:10px;cursor:pointer}button:active{background:#a63e42}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wide{width:100%}label{display:block;margin:10px 0 5px;color:#cbd3dd}input[type=color]{width:100%;height:38px;border:0;background:none}input[type=number],select{background:#293441;border:1px solid #526171;border-radius:7px;padding:9px;color:white;width:100%}.small{font-size:12px;color:#aab8c7;line-height:1.5}.selected{background:#26323e;padding:10px;border-radius:8px}.foot{font-size:11px;color:#9faab7;margin-top:18px}a{color:#ff9a9c}@media(max-width:760px){.layout{display:flex;flex-direction:column;height:auto}#view{height:55dvh;min-height:340px}aside{border-left:0;border-top:1px solid #34404d}header{padding:12px}.hint{font-size:11px}}
-</style></head><body><header><h1>THE HEAT <span>3D STUDIO</span></h1><span class="tag">BETA 2.1 · DECK CONECTADO</span></header>
+</style></head><body><header><h1>THE HEAT <span>3D STUDIO</span></h1><span class="tag">BETA 3 · ESTRUTURA RECONSTRUÍDA</span></header>
 <div class="layout"><main id="view"><div class="hint">Arraste o fundo para girar · Pinça/roda para zoom · Toque num objeto para selecionar · Modo mover: arraste o objeto</div><div id="error"></div></main>
 <aside><div class="buttons"><button id="iso">Vista 3D</button><button id="top">Planta ↑</button><button id="center">Recentralizar</button><button id="deckView">Entrar no deck</button><button id="salonView">Entrar no salão</button><button id="counterView">Ver balcão</button><button id="kitchenView">Ver cozinha</button><button id="move">Mover: desligado</button></div>
-<h2>VISUALIZAÇÃO</h2><label><input id="roof" type="checkbox" checked> Cobertura do pergolado</label><label><input id="cutaway" type="checkbox" checked> Paredes em corte (visão aérea)</label><h2>VERSÃO DO IMÓVEL</h2><select id="version"><option value="heat">Projeto The Heat</option><option value="original">Imóvel original (Borelli)</option></select><p class="small">Fotos reais orientam os materiais e os detalhes. Dimensões não cotadas são aproximadas.</p><h2>ELEMENTO SELECIONADO</h2><div class="selected"><strong id="selectedName">Nenhum</strong><div id="selectedType" class="small">Toque em um móvel ou parede</div></div>
+<h2>VISUALIZAÇÃO</h2><label><input id="roof" type="checkbox" checked> Cobertura do pergolado</label><label><input id="cutaway" type="checkbox" checked> Paredes em corte (visão aérea)</label><h2>VERSÃO DO IMÓVEL</h2><select id="version"><option value="heat">Estrutura para The Heat (sem móveis)</option><option value="original">Imóvel original (sem móveis)</option></select><p class="small">Reconstrução arquitetônica preliminar da planta de 2021 e fotos reais. Confira vãos e dimensões em obra.</p><h2>ELEMENTO SELECIONADO</h2><div class="selected"><strong id="selectedName">Nenhum</strong><div id="selectedType" class="small">Toque em um móvel ou parede</div></div>
 <label>Cor do elemento</label><input id="color" type="color" value="#dd554e"><div class="buttons"><button id="rotate">Girar 90°</button><button id="delete">Excluir objeto</button></div>
 <h2>ADICIONAR ELEMENTOS</h2><div class="buttons"><button data-add="Mesa">Mesa</button><button data-add="Cadeira">Cadeira</button><button data-add="Equipamento">Equipamento</button><button data-add="Balcão">Balcão</button><button data-add="Parede">Painel móvel</button><button data-add="Decoração">Decoração</button></div>
 <h2>AMBIENTES</h2><select id="rooms"><option value="all">Todos os ambientes</option><option value="atendimento">Atendimento</option><option value="salao">Salão</option><option value="cozinha">Cozinha</option><option value="deck">Deck / pergolado</option><option value="banheiros">Banheiros e circulação</option></select>
@@ -33,7 +33,7 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const view=document.getElementById('view'),err=document.getElementById('error');
 let renderer,scene,camera,controls,raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2(),selected=null,moveMode=false,dragging=false,objects=[],counter=0;
-const STORE='theheat3dstudio-alpha-03';
+const STORE='theheat3dstudio-beta-03';
 function fail(e){err.style.display='block';err.textContent='Não foi possível iniciar o 3D neste navegador. Abra o endereço publicado no Safari ou Chrome atualizado. Detalhe: '+String(e?.message||e)}
 try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(view.clientWidth,view.clientHeight);renderer.shadowMap.enabled=true;renderer.outputColorSpace=THREE.SRGBColorSpace;view.prepend(renderer.domElement);
 scene=new THREE.Scene();scene.background=new THREE.Color('#c8d0d1');camera=new THREE.PerspectiveCamera(50,view.clientWidth/view.clientHeight,.1,200);camera.position.set(19,21,23);
@@ -44,94 +44,55 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandar
 // Planta Borelli, folha 01/07, 14/09/2021. Traçado reconstruído a partir das cotas e posições do desenho.
 // X/Z em metros. A estrutura é somente leitura; confirmar cotas locais antes de executar obra.
 const defs=[];
-const floor=(n,r,x1,z1,x2,z2,c)=>defs.push([n,r,'floor',(x1+x2)/2,0,(z1+z2)/2,x2-x1,.08,z2-z1,c]);
-const wall=(n,r,x1,z1,x2,z2,h=2.93,c='#f4f3f0')=>{const len=Math.hypot(x2-x1,z2-z1);const horizontal=Math.abs(x2-x1)>=Math.abs(z2-z1);defs.push([n,r,'wall',(x1+x2)/2,h/2,(z1+z2)/2,horizontal?len:.14,h,horizontal?.14:len,c])};
+const floor=(n,r,x1,z1,x2,z2,c)=>defs.push([n,r,'floor',(x1+x2)/2,0,(z1+z2)/2,x2-x1,.07,z2-z1,c]);
+const wall=(n,r,x1,z1,x2,z2,h=2.93,c='#f3f1eb')=>{const len=Math.hypot(x2-x1,z2-z1),horiz=Math.abs(x2-x1)>Math.abs(z2-z1);defs.push([n,r,'wall',(x1+x2)/2,h/2,(z1+z2)/2,horiz?len:.15,h,horiz?.15:len,c])};
 const item=(n,r,x,z,w,h,d,c)=>defs.push([n,r,'furniture',x,h/2,z,w,h,d,c]);
-// Referência: extremidade esquerda do deck = X0; alinhamento superior = Z0.
-floor('Deck / pergolado · 19,54 m²','deck',0,1.78,4.70,9.47,'#c6a784');
-floor('Rampa de acesso','deck',0,0,4.70,1.78,'#b8bab6');
-// Sem faixa intermediária: o pergolado encosta diretamente no salão.\n
-floor('Salão · 17,47 m²','salao',4.70,0,9.89,3.35,'#e2d7c8');
-floor('Atendimento · 23,18 m²','atendimento',4.70,3.35,9.89,8.38,'#e8d8c8');
-floor('WC feminino · 3,37 m²','banheiros',9.89,1.10,11.44,3.27,'#bcd3d9');
-floor('WC PNE / masculino · 3,56 m²','banheiros',11.44,1.10,13.08,3.27,'#bcd3d9');
-floor('Circulação · 4,45 m²','banheiros',9.89,3.27,13.88,4.45,'#d7dce0');
-floor('Cozinha · 13,99 m²','cozinha',9.89,4.55,13.88,8.38,'#c8d0d3');
-floor('Corredor lateral externo','deck',4.70,8.50,13.88,9.65,'#bbc3c6');
-// Salão: parede externa e grande fechamento envidraçado PC360 no lado esquerdo.
-wall('Salão · parede superior','salao',4.70,0,9.89,0,2.16);
-// A fachada tem vão envidraçado, mas não uma barreira opaca contínua.\nwall('Salão · caixilho superior','salao',4.70,.18,4.70,3.20,2.15,'#8eb9c3');
-wall('Salão · divisória com atendimento','salao',4.70,3.35,9.89,3.35,2.16);
-// Divisão com sanitários, circulação e cozinha, preservando vãos indicados.
-wall('Salão · parede direita','salao',9.89,0,9.89,3.35,2.16);
-wall('Atendimento · fechamento lateral','atendimento',4.70,3.35,4.70,8.38);
-wall('Atendimento · parede inferior','atendimento',4.70,8.38,9.89,8.38);
-wall('Atendimento · parede direita superior','atendimento',9.89,3.35,9.89,3.93);
-wall('Atendimento · parede direita inferior','atendimento',9.89,4.98,9.89,8.38);
-// WC: divisórias, parede externa e vãos de portas existentes PE.
-wall('Sanitários · parede superior','banheiros',9.89,1.10,13.08,1.10,2.95);
-wall('Sanitários · lateral esquerda','banheiros',9.89,1.10,9.89,3.27,2.95);
-wall('Sanitários · divisória central','banheiros',11.44,1.10,11.44,3.27,2.95);
-wall('Sanitários · lateral direita','banheiros',13.08,1.10,13.08,3.27,2.95);
-wall('WC feminino · trecho parede','banheiros',9.89,3.27,10.15,3.27,2.95);
-wall('WC feminino · trecho parede 2','banheiros',11.05,3.27,11.44,3.27,2.95);
-wall('WC PNE · trecho parede','banheiros',11.44,3.27,11.64,3.27,2.95);
-wall('WC PNE · trecho parede 2','banheiros',12.54,3.27,13.08,3.27,2.95);
-wall('Circulação · parede superior','banheiros',13.08,3.27,13.88,3.27);
-wall('Circulação · acesso restrito','banheiros',13.88,3.27,13.88,3.58);
-wall('Circulação · acesso restrito 2','banheiros',13.88,4.45,13.88,4.55);
-// Cozinha com vão de acesso P100 no lado esquerdo e porta P90 ao depósito no lado direito.
-wall('Cozinha · parede superior','cozinha',9.89,4.55,13.88,4.55);
-wall('Cozinha · parede direita superior','cozinha',13.88,4.55,13.88,5.40);
-wall('Cozinha · parede direita inferior','cozinha',13.88,6.30,13.88,8.38);
-wall('Cozinha · parede inferior','cozinha',9.89,8.38,13.88,8.38);
-wall('Cozinha · parede esquerda superior','cozinha',9.89,4.55,9.89,5.30);
-wall('Cozinha · parede esquerda inferior','cozinha',9.89,6.30,9.89,8.38);
-// Pilares do pergolado. O restante da estrutura é indicado sem fechamento do deck.
-item('Pilar pergolado · frente 1','deck',.08,1.78,.16,2.8,.16,'#343a40');
-item('Pilar pergolado · frente 2','deck',.08,9.30,.16,2.8,.16,'#343a40');
-// Elementos de estudo do layout original: não representam equipamentos finais da The Heat.
-item('Balcão original Borelli · referência','atendimento',6.25,5.75,2.2,1.0,.65,'#b7bdc0');
-item('Expositor Borelli · referência','atendimento',8.25,6.55,1.5,1.1,.65,'#b6c0c5');
-item('Bancada cozinha · referência','cozinha',12.5,7.90,1.7,.9,.6,'#b6c0c5');
-
-
-/* MELHORIA BETA — Detalhamento visual derivado das fotografias recebidas em 03/11/2026.
-   Volumes auxiliares e posições aproximadas: conferir antes de obra. */
-const heat=(n,r,x,z,w,h,d,c)=>item('THE HEAT · '+n,r,x,z,w,h,d,c);
-const old=(n,r,x,z,w,h,d,c)=>item('BORELLI · '+n,r,x,z,w,h,d,c);
-// Deck: pilares, travessas pretas, cobertura translúcida, guarda-corpo e mesas
-for(let i=0;i<6;i++){const z=2.05+i*1.35;item('Estrutura · viga pergolado','deck',1.45,z,2.8,.13,.11,'#24272a');}
-for(let i=0;i<7;i++){const z=2.05+i*1.15;item('Estrutura · montante guarda-corpo','deck',.13,z,.065,1.0,.065,'#24272a');}
-item('Estrutura · corrimão deck','deck',.13,5.55,.075,1.05,7.2,'#25272a');
-for(let i=0;i<4;i++){const z=3+i*1.6;old('mesa deck '+(i+1),'deck',1.25,z,.76,.78,.76,'#e7e4de');}
-item('Estrutura · janela com caixilho preto','atendimento',4.68,5.55,.055,1.35,2.3,'#2d3438');
-// Cozinha: coifa em L e dois dutos; volumes provisórios de referência fotográfica
-item('Estrutura · coifa inox principal','cozinha',11.7,7.90,2.7,.57,.78,'#aeb7bb');
-item('Estrutura · coifa inox retorno','cozinha',10.25,7.40,.78,.57,1.25,'#aeb7bb');
-item('Estrutura · painel inox de proteção','cozinha',11.7,8.24,2.7,1.0,.045,'#b9c4c8');
-item('Estrutura · ralo linear','cozinha',11.45,6.45,1.9,.018,.095,'#59656a');
-for(let i=0;i<2;i++)item('Estrutura · duto inox '+(i+1),'cozinha',10.9+i*1.35,7.90,.36,.5,.36,'#adb6bb');
-// Trilhos de spots e iluminação pendente nos ambientes sociais
-for(let i=0;i<5;i++){item('Estrutura · spot atendimento '+(i+1),'atendimento',5.4+i*.8,4.4,.12,.16,.12,'#eeeeeb');}
-for(let i=0;i<4;i++){item('Estrutura · spot salão '+(i+1),'salao',5.3+i*1.1,1.4,.12,.16,.12,'#f4f4f1');}
-for(let i=0;i<3;i++){item('Estrutura · pendente '+(i+1),'atendimento',5.5+i*1.25,6.3,.22,.35,.22,'#f0ece6');}
-// Atendimento: 3 módulos de 1,20m, 1,015m de altura; caixa 1,215m
-for(let i=0;i<3;i++){const x=5.48+i*1.2;heat(['RETIRADA','COOKIES','CAIXA'][i],'atendimento',x,5.8,1.2,i===2?1.215:1.015,.72,i===1?'#f4f0ed':'#c71928');heat('tampo branco '+(i+1),'atendimento',x,5.8,1.2,.05,.75,'#faf8f5');}
-heat('expositor cookies central','atendimento',6.68,5.8,.95,.33,.45,'#c9d2d2');
-heat('TV menu 1','atendimento',7.2,7.75,1.1,.72,.065,'#171b20');
-heat('TV menu 2','atendimento',8.42,7.75,1.1,.72,.065,'#171b20');
-heat('geladeira bebidas 1','atendimento',7.65,7.65,.68,1.78,.62,'#22272a');
-heat('geladeira bebidas 2','atendimento',8.38,7.65,.68,1.78,.62,'#b31922');
-heat('forno de cookies','atendimento',6.35,7.65,.62,.67,.55,'#879299');
-heat('estufa aquecida','atendimento',5.48,7.65,.9,1.0,.58,'#b6c1c4');
-// Salão: banco vermelho, mesas brancas e detalhes
-heat('estofado vermelho','salao',7.1,.45,3.5,.84,.62,'#a91826');
-heat('painel de lambris vermelho','salao',7.1,.12,3.5,.95,.06,'#9f1824');
-heat('espelho horizontal','salao',7.1,.22,3.5,.32,.045,'#b8cdd0');
-heat('TV salão','salao',7.1,.16,1.18,.69,.055,'#202326');
-for(let i=0;i<3;i++){heat('mesa branca '+(i+1),'salao',5.7+i*1.4,1.45,.76,.76,.72,'#f4f1eb');heat('cadeira vermelha '+(i+1),'salao',5.7+i*1.4,2.15,.46,.8,.48,'#c71928');}
-// Aplicar posicionamento vertical correto aos elementos decorativos criados com item()
+// Reconstrução da folha 01/07 (2021). X cresce da calçada ao fundo, Z da rampa para o fundo.
+// A planta mostra 2,90 m de deck + 1,42 m de faixa externa contígua antes da fachada.
+// Essas duas faixas são UM MESMO ESPAÇO EXTERNO, sem parede ou corredor entre elas.
+const F=4.32, S=9.51, K=13.70;
+floor('Deck principal · 19,54 m²','deck',0,1.50,2.90,9.18,'#a79b8e');
+floor('Faixa externa contígua ao deck','deck',2.90,1.50,F,9.18,'#a79b8e');
+floor('Rampa existente','deck',0,0,2.90,1.50,'#b5aea5');
+floor('Hall de entrada existente','deck',2.90,0,F,1.50,'#b5aea5');
+floor('Salão · 17,47 m²','salao',F,0,S,3.37,'#8b7868');
+floor('Atendimento · 23,18 m²','atendimento',F,3.37,S,8.38,'#8b7868');
+floor('WC feminino · 3,37 m²','banheiros',S,1.07,11.06,3.24,'#d7d3ca');
+floor('WC PNE / masculino · 3,56 m²','banheiros',11.06,1.07,K,3.24,'#d7d3ca');
+floor('Circulação · 4,45 m²','banheiros',S,3.24,K,4.43,'#c6c2b8');
+floor('Cozinha · 13,99 m²','cozinha',S,4.43,K,8.38,'#d4d0c7');
+floor('Corredor lateral externo · fundos','deck',F,8.50,K,9.25,'#c5c0b6');
+// Paredes exteriores e vãos — salão e atendimento comunicam-se por vão aberto (sem divisória).
+wall('Salão · parede do fundo','salao',F,0,S,0,2.16);
+wall('Salão · parede lateral direita','salao',S,0,S,3.24,2.16);
+wall('Salão · trecho frontal tijolo 1','salao',F,0,F,.43,2.16,'#ae6a4b');
+wall('Salão · trecho frontal tijolo 2','salao',F,2.75,F,3.37,2.16,'#ae6a4b');
+// Abertura de 3,60 m de correr na entrada do salão, orientada para deck/hall.
+wall('Atendimento · parede lateral direita 1','atendimento',S,3.24,S,3.68);
+wall('Atendimento · parede lateral direita 2','atendimento',S,4.65,S,8.38);
+wall('Atendimento · parede dos fundos','atendimento',F,8.38,S,8.38);
+wall('Atendimento · fachada tijolo trecho 1','atendimento',F,3.37,F,4.30,2.93,'#ae6a4b');
+wall('Atendimento · fachada tijolo trecho 2','atendimento',F,6.60,F,8.38,2.93,'#ae6a4b');
+// Banheiros conforme cotas de largura 1,55 m e 1,64 m.
+wall('Sanitários · parede externa','banheiros',S,1.07,K,1.07,2.95);
+wall('Sanitários · parede esquerda','banheiros',S,1.07,S,3.24,2.95);
+wall('Sanitários · parede divisória','banheiros',11.06,1.07,11.06,3.24,2.95);
+wall('Sanitários · parede direita','banheiros',K,1.07,K,3.24,2.95);
+wall('WC feminino · parede frontal esquerda','banheiros',S,3.24,9.78,3.24,2.95);
+wall('WC feminino · parede frontal direita','banheiros',10.63,3.24,11.06,3.24,2.95);
+wall('WC acessível · parede frontal esquerda','banheiros',11.06,3.24,11.48,3.24,2.95);
+wall('WC acessível · parede frontal direita','banheiros',12.38,3.24,K,3.24,2.95);
+wall('Circulação · parede direita','banheiros',K,3.24,K,3.56);
+wall('Circulação · parede direita inferior','banheiros',K,4.42,K,4.43);
+// Cozinha: acesso pelo atendimento e circulação; não criar fechamento onde há porta.
+wall('Cozinha · parede superior esquerda','cozinha',S,4.43,10.05,4.43);
+wall('Cozinha · parede superior direita','cozinha',11.05,4.43,K,4.43);
+wall('Cozinha · parede direita superior','cozinha',K,4.43,K,5.35);
+wall('Cozinha · parede direita inferior','cozinha',K,6.25,K,8.38);
+wall('Cozinha · parede inferior','cozinha',S,8.38,K,8.38);
+wall('Cozinha · parede esquerda superior','cozinha',S,4.43,S,5.15);
+wall('Cozinha · parede esquerda inferior','cozinha',S,6.15,S,8.38);
+// Sem mobiliário nesta etapa: validar arquitetura antes da decoração.
 function improveGeometry(){for(const o of objects){const n=o.userData.name;if(n.includes('coifa inox'))o.position.y=2.35;if(n.includes('painel inox'))o.position.y=1.35;if(n.includes('duto inox'))o.position.y=2.75;if(n.includes('spot '))o.position.y=o.userData.room==='salao'?2.03:2.78;if(n.includes('pendente '))o.position.y=2.35;if(n.includes('TV menu'))o.position.y=2.42;if(n.includes('TV salão'))o.position.y=1.85;if(n.includes('espelho horizontal'))o.position.y=1.55;if(n.includes('painel de lambris'))o.position.y=.7;if(n.includes('tampo branco'))o.position.y=n.includes('3')?1.235:1.04;if(n.includes('expositor cookies'))o.position.y=1.22;if(n.includes('janela com caixilho'))o.position.y=1.45;if(n.includes('corrimão deck'))o.position.y=1.05;if(n.includes('viga pergolado'))o.position.y=2.68;if(n.includes('montante guarda-corpo'))o.position.y=.5;if(n.includes('ralo linear'))o.position.y=.02;}}
 function setVersion(){applyVisibility()}
 
@@ -146,46 +107,45 @@ function cube(x,y,z,w,h,d,m,room='deck',roof=false){return mesh(new THREE.BoxGeo
 function cyl(x,y,z,r,h,m,room='deck'){return mesh(new THREE.CylinderGeometry(r,r,h,12),m,x,y,z,room)}
 function line(x1,y1,z1,x2,y2,z2,r,m,room='deck'){const a=new THREE.Vector3(x1,y1,z1),b=new THREE.Vector3(x2,y2,z2),v=b.clone().sub(a);const o=mesh(new THREE.CylinderGeometry(r,r,v.length(),8),m,...a.clone().add(b).multiplyScalar(.5).toArray(),room);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());return o}
 function detailScene(){
-// Deck 19,54 m² — metal preto, placas brancas, travessas, corrimão, mesa e tijolo.
-for(let z=2.15;z<9.4;z+=.55){cube(1.45,2.77,z,2.76,.038,.49,white,'deck',true)}
-cube(1.43,2.79,1.84,2.85,.12,.12,steel,'deck',true);cube(1.43,2.79,9.44,2.85,.12,.12,steel,'deck',true);
-for(let z=2.05;z<9.4;z+=1.35)cube(1.45,2.81,z,2.92,.14,.13,steel,'deck',true);
-// A fachada existente tem aberturas: não criar parede maciça entre deck e salão.\ncube(4.66,1.42,7.4,.10,2.8,3.8,brick,'deck');
-for(let z=2.2;z<9.3;z+=.21){cube(4.59,1.3,z,.016,.012,.16,mat('#d4a187',0,.9),'deck')}
-for(let z=2.15;z<9.25;z+=.25){cube(.16,.46,z,.025,.92,.025,steel,'deck')}
-cube(.16,.97,5.7,.075,.075,7.4,steel,'deck');cube(.16,.10,5.7,.06,.05,7.4,steel,'deck');
-for(let z=2.9;z<9;z+=1.55){cube(1.18,.77,z,.72,.045,.72,white,'deck');cyl(1.18,.39,z,.052,.72,steel,'deck');cube(1.18,.065,z,.39,.045,.39,steel,'deck')}
-// Wall-mounted window on brick side, dark glazing.
-cube(4.62,1.52,5.6,.038,1.25,2.4,steel,'deck');cube(4.59,1.52,5.6,.026,1.14,2.28,glass,'deck');
-cube(4.59,1.52,5.6,.055,1.25,.035,steel,'deck');
-// Salon: red upholstered banquette with segmented cushions, framed horizontal mirror, white tables.
-for(let x=5.55;x<9.15;x+=.72){cube(x,.46,.55,.69,.44,.5,red,'salao');cube(x,.87,.28,.69,.68,.19,red,'salao')}
-cube(7.25,1.47,.095,3.55,.38,.035,chrome,'salao');
-cube(7.25,1.47,.12,3.48,.32,.025,glass,'salao');
-for(let x=5.9;x<9;x+=1.2){cube(x,.76,1.45,.78,.055,.65,white,'salao');cyl(x,.39,1.45,.05,.72,steel,'salao');cube(x,.055,1.45,.38,.05,.32,steel,'salao');cube(x,.42,2.1,.46,.08,.45,red,'salao');cube(x,.74,2.32,.45,.62,.08,red,'salao')}
-// Service counter: separate plinth, colored panels, worktop, lettering using canvas textures.
-for(let i=0;i<3;i++){let x=5.48+i*1.2;cube(x,.07,5.8,1.17,.14,.76,steel,'atendimento');cube(x,i===2?1.225:1.025,5.8,1.19,.06,.8,white,'atendimento');}
-const textFace=(txt,w,h,c)=>{let canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;let ctx=canvas.getContext('2d');ctx.clearRect(0,0,1024,256);ctx.fillStyle=c;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 140px Arial';ctx.fillText(txt,512,135);let t=new THREE.CanvasTexture(canvas);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide})};
-function signage(txt,x,z,y,w,c){const o=mesh(new THREE.PlaneGeometry(w,.28),textFace(txt,w,.28,c),x,y,z,'atendimento');return o}
-signage('RETIRADA',5.48,5.425,.55,1.0,'#ffffff');signage('CAIXA',7.88,5.425,.55,.75,'#ffffff');signage('THE HEAT',6.68,5.425,.55,1.04,'#c71928');
-for(let x of [7.15,8.38]){cube(x,2.46,7.76,1.1,.66,.05,steel,'atendimento');cube(x,2.46,7.725,1.01,.57,.012,mat('#11191c',.1,.23),'atendimento')}
-for(let x of [7.65,8.38]){cube(x,1.1,7.32,.59,1.65,.055,steel,'atendimento');cube(x,1.13,7.285,.49,1.35,.012,glass,'atendimento');for(let y=.65;y<1.8;y+=.25)cube(x,y,7.265,.47,.012,.015,chrome,'atendimento')}
-for(let x of [5.5,6.7,7.9]){let l=new THREE.PointLight(0xffd5a3,.45,3);l.position.set(x,2.48,6.2);scene.add(l);detailMeshes.push(l)}
-// Kitchen: stainless backsplash, metal hood, two exhaust tubes, drainage.
-cube(11.65,1.36,8.26,2.8,1.1,.028,chrome,'cozinha');cube(10.25,1.36,7.43,.028,1.1,1.32,chrome,'cozinha');
-for(let x of [10.9,12.25]){cyl(x,2.73,7.87,.17,.47,chrome,'cozinha');}
-cube(11.68,2.05,7.91,2.7,.055,.83,chrome,'cozinha');
-for(let x=10.45;x<13;x+=.35)cube(x,1.94,7.92,.015,.07,.72,steel,'cozinha');
-cube(11.42,.025,6.4,1.9,.025,.10,chrome,'cozinha');
+// Estrutura externa: vigas de aço preto, cobertura branca e guarda-corpo voltado à rua.
+// Foto real: a cobertura ocupa todo o pergolado, e a fachada é o limite do deck.
+for(let z=1.55;z<9.17;z+=.54)cube(2.13,2.73,z,4.25,.035,.50,white,'deck',true);
+for(let z=1.53;z<9.19;z+=1.27)cube(2.14,2.78,z,4.30,.13,.12,steel,'deck',true);
+for(const x of [.08,4.25])cube(x,2.75,5.37,.12,.15,7.65,steel,'deck',true);
+for(const z of [1.55,5.35,9.13])cube(.08,1.37,z,.15,2.75,.15,steel,'deck');
+for(let z=1.62;z<9.15;z+=1.20)cube(.12,.54,z,.07,1.08,.07,steel,'deck');
+cube(.12,1.08,5.37,.08,.08,7.55,steel,'deck');
+cube(.12,.14,5.37,.06,.06,7.55,steel,'deck');
+// Fachada real: tijolos aparentes e esquadrias pretas, sem corredor intermediário.
+const glazing=mat('#71909c',.18,.19,true,.33);
+cube(4.30,1.15,1.58,.045,2.14,2.30,glazing,'salao');
+for(const z of [.43,1.58,2.73])cube(4.27,1.15,z,.055,2.18,.055,steel,'salao');
+cube(4.27,2.23,1.58,.055,.07,2.33,steel,'salao');
+cube(4.30,1.30,5.43,.045,1.25,2.30,glazing,'atendimento');
+for(const z of [4.31,5.45,6.59])cube(4.27,1.30,z,.06,1.35,.06,steel,'atendimento');
+cube(4.27,1.95,5.45,.06,.07,2.35,steel,'atendimento');
+cube(4.27,.65,5.45,.06,.07,2.35,steel,'atendimento');
+// Piso externo contínuo; estrutura sem divisória artificial.
+for(let z=2.10;z<9.0;z+=1.38){cube(1.55,.76,z,.70,.045,.70,white,'deck');cyl(1.55,.38,z,.052,.70,steel,'deck');cube(1.55,.055,z,.40,.04,.40,steel,'deck')}
+// Coifa em L existente, conforme fotos, sem equipamentos fictícios.
+cube(11.53,2.12,8.00,2.90,.55,.78,chrome,'cozinha');
+cube(10.07,2.12,7.45,.72,.55,1.22,chrome,'cozinha');
+cube(11.53,1.28,8.35,2.90,1.06,.025,chrome,'cozinha');
+cube(9.77,1.28,7.45,.025,1.06,1.25,chrome,'cozinha');
+for(const x of [10.72,12.25])cyl(x,2.66,8.00,.18,.48,chrome,'cozinha');
+// Marcação visual do vão aberto entre salão e atendimento (viga superior, não parede).
+cube(6.92,2.08,3.37,5.18,.16,.22,white,'salao');
+// Forro interno em níveis diferentes, conforme pé-direito cotado na planta.
+cube(6.92,2.17,1.68,5.18,.055,3.34,white,'salao',true);
+cube(6.92,2.94,5.88,5.18,.055,5.00,white,'atendimento',true);
+cube(11.60,2.95,6.40,4.17,.055,3.94,white,'cozinha',true);
 }
 detailScene();
-// Corrige a largura do deck para encostar na fachada sem corredor artificial.
-for(const o of detailMeshes){if(o.userData.room!=='deck')continue;if(o.position.x<4.0){const oldX=o.position.x;o.position.x=oldX*4.7/2.9;if(o.geometry?.type==='BoxGeometry'&&o.geometry.parameters.width>1.0){o.scale.x*=4.7/2.9}}}
 function applyVisibility(){let v=document.getElementById('rooms').value,heatMode=document.getElementById('version').value==='heat',roofOn=document.getElementById('roof').checked,cutaway=document.getElementById('cutaway').checked;
-for(const o of objects){if(o.userData.room==='deck'&&o.userData.name.includes('Estrutura ·')&&!o.userData.deckAdjusted){o.position.x=o.position.x*4.7/2.9;if(o.userData.w>1.1)o.scale.x*=4.7/2.9;o.userData.deckAdjusted=true}let n=o.userData.name,vis=v==='all'||o.userData.room===v;if(n.startsWith('THE HEAT ·'))vis=vis&&heatMode;else if(n.startsWith('BORELLI ·')||n.includes('original Borelli')||n.includes('Expositor Borelli'))vis=vis&&!heatMode;o.visible=vis;
+for(const o of objects){let n=o.userData.name,vis=v==='all'||o.userData.room===v;if(n.startsWith('THE HEAT ·'))vis=vis&&heatMode;else if(n.startsWith('BORELLI ·')||n.includes('original Borelli')||n.includes('Expositor Borelli'))vis=vis&&!heatMode;o.visible=vis;
 if(o.userData.type==='wall'&&cutaway&&v==='all'&&o.position.y>1.4&&o.userData.room!=='cozinha'){o.scale.y=.62;o.position.y=o.userData.h*.31}else if(o.userData.type==='wall'){o.scale.y=1;o.position.y=o.userData.h/2}
 }
-for(const o of detailMeshes){if(o.isLight){o.visible=heatMode;continue}o.visible=(v==='all'||o.userData.room===v)&&(!roofMeshes.includes(o)||roofOn)&&(!o.userData.room||heatMode||o.userData.room==='deck'||o.userData.room==='cozinha');}
+for(const o of detailMeshes){if(o.isLight){o.visible=heatMode;continue}o.visible=(v==='all'||o.userData.room===v)&&(!roofMeshes.includes(o)||roofOn)&&true;}
 }
 const focus=(x,y,z,tx,ty,tz)=>{camera.position.set(x,y,z);controls.target.set(tx,ty,tz);controls.maxPolarAngle=Math.PI-.08;controls.update()};
 document.getElementById('deckView').onclick=()=>focus(1.25,1.65,3.1,1.5,1.4,6.2);
@@ -219,6 +179,6 @@ document.getElementById('export').onclick=()=>{const a=document.createElement('a
 document.getElementById('reset').onclick=()=>{if(confirm('Restaurar o modelo inicial? Alterações não salvas serão perdidas.'))restore(defs.map(d=>({name:d[0],room:d[1],type:d[2],x:d[3],y:d[4],z:d[5],w:d[6],h:d[7],d:d[8],color:d[9]})))};
 document.getElementById('file').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());restore(j.objects||j)}catch(x){alert('Arquivo inválido: '+x.message)}};
 window.addEventListener('resize',()=>{let w=view.clientWidth,h=view.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)});
-init();improveGeometry();setVersion();document.getElementById('version').onchange=setVersion;renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});window.__heat3dReady=true;document.getElementById('diag').textContent='Projeto The Heat atualizado · detalhes fotográficos';setTimeout(()=>document.getElementById('diag').remove(),3500);
+init();improveGeometry();setVersion();document.getElementById('version').onchange=setVersion;renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});window.__heat3dReady=true;document.getElementById('diag').textContent='Beta 3 · estrutura reconstruída a partir da planta';setTimeout(()=>document.getElementById('diag').remove(),3500);
 }catch(e){fail(e)}
 </script></body></html>
