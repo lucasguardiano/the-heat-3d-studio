@@ -2,10 +2,10 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>The Heat 3D Studio</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#10151b;color:#f4f5f6;font:14px system-ui,-apple-system,Arial}header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#181f28;border-bottom:1px solid #34404d}h1{font-size:17px;margin:0}h1 span{color:#ff5559}.tag{font-size:11px;color:#f5b8b8;background:#542b31;border-radius:20px;padding:5px 9px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;height:calc(100dvh - 54px)}#view{position:relative;min-width:0;min-height:350px;touch-action:none}canvas{display:block;width:100%;height:100%}.hint{position:absolute;left:12px;top:12px;background:#18212cdb;border-radius:9px;padding:10px;pointer-events:none;max-width:290px;font-size:12px;color:#d4dde8}#error{display:none;position:absolute;inset:20%;background:#342328;color:#fff;padding:18px;border-radius:12px;z-index:5}aside{padding:16px;background:#1a222c;overflow:auto;border-left:1px solid #34404d}h2{font-size:12px;letter-spacing:1.3px;color:#a8b4c4;margin:18px 0 9px}button,select,input{font:inherit}button{background:#303d4b;border:1px solid #526171;border-radius:8px;color:white;padding:10px;cursor:pointer}button:active{background:#a63e42}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wide{width:100%}label{display:block;margin:10px 0 5px;color:#cbd3dd}input[type=color]{width:100%;height:38px;border:0;background:none}input[type=number],select{background:#293441;border:1px solid #526171;border-radius:7px;padding:9px;color:white;width:100%}.small{font-size:12px;color:#aab8c7;line-height:1.5}.selected{background:#26323e;padding:10px;border-radius:8px}.foot{font-size:11px;color:#9faab7;margin-top:18px}a{color:#ff9a9c}@media(max-width:760px){.layout{display:flex;flex-direction:column;height:auto}#view{height:55dvh;min-height:340px}aside{border-left:0;border-top:1px solid #34404d}header{padding:12px}.hint{font-size:11px}}
-</style></head><body><header><h1>THE HEAT <span>3D STUDIO</span></h1><span class="tag">BETA · REFERÊNCIAS REAIS + PROJETO THE HEAT</span></header>
+</style></head><body><header><h1>THE HEAT <span>3D STUDIO</span></h1><span class="tag">BETA 2 · VISUALIZAÇÃO ARQUITETÔNICA</span></header>
 <div class="layout"><main id="view"><div class="hint">Arraste o fundo para girar · Pinça/roda para zoom · Toque num objeto para selecionar · Modo mover: arraste o objeto</div><div id="error"></div></main>
-<aside><div class="buttons"><button id="iso">Vista 3D</button><button id="top">Planta ↑</button><button id="center">Recentralizar</button><button id="move">Mover: desligado</button></div>
-<h2>VERSÃO DO IMÓVEL</h2><select id="version"><option value="heat">Projeto The Heat</option><option value="original">Imóvel original (Borelli)</option></select><p class="small">Fotos reais orientam os materiais e os detalhes. Dimensões não cotadas são aproximadas.</p><h2>ELEMENTO SELECIONADO</h2><div class="selected"><strong id="selectedName">Nenhum</strong><div id="selectedType" class="small">Toque em um móvel ou parede</div></div>
+<aside><div class="buttons"><button id="iso">Vista 3D</button><button id="top">Planta ↑</button><button id="center">Recentralizar</button><button id="deckView">Entrar no deck</button><button id="salonView">Entrar no salão</button><button id="counterView">Ver balcão</button><button id="kitchenView">Ver cozinha</button><button id="move">Mover: desligado</button></div>
+<h2>VISUALIZAÇÃO</h2><label><input id="roof" type="checkbox" checked> Cobertura do pergolado</label><label><input id="cutaway" type="checkbox" checked> Paredes em corte (visão aérea)</label><h2>VERSÃO DO IMÓVEL</h2><select id="version"><option value="heat">Projeto The Heat</option><option value="original">Imóvel original (Borelli)</option></select><p class="small">Fotos reais orientam os materiais e os detalhes. Dimensões não cotadas são aproximadas.</p><h2>ELEMENTO SELECIONADO</h2><div class="selected"><strong id="selectedName">Nenhum</strong><div id="selectedType" class="small">Toque em um móvel ou parede</div></div>
 <label>Cor do elemento</label><input id="color" type="color" value="#dd554e"><div class="buttons"><button id="rotate">Girar 90°</button><button id="delete">Excluir objeto</button></div>
 <h2>ADICIONAR ELEMENTOS</h2><div class="buttons"><button data-add="Mesa">Mesa</button><button data-add="Cadeira">Cadeira</button><button data-add="Equipamento">Equipamento</button><button data-add="Balcão">Balcão</button><button data-add="Parede">Painel móvel</button><button data-add="Decoração">Decoração</button></div>
 <h2>AMBIENTES</h2><select id="rooms"><option value="all">Todos os ambientes</option><option value="atendimento">Atendimento</option><option value="salao">Salão</option><option value="cozinha">Cozinha</option><option value="deck">Deck / pergolado</option><option value="banheiros">Banheiros e circulação</option></select>
@@ -133,12 +133,70 @@ heat('TV salão','salao',7.1,.16,1.18,.69,.055,'#202326');
 for(let i=0;i<3;i++){heat('mesa branca '+(i+1),'salao',5.7+i*1.4,1.45,.76,.76,.72,'#f4f1eb');heat('cadeira vermelha '+(i+1),'salao',5.7+i*1.4,2.15,.46,.8,.48,'#c71928');}
 // Aplicar posicionamento vertical correto aos elementos decorativos criados com item()
 function improveGeometry(){for(const o of objects){const n=o.userData.name;if(n.includes('coifa inox'))o.position.y=2.35;if(n.includes('painel inox'))o.position.y=1.35;if(n.includes('duto inox'))o.position.y=2.75;if(n.includes('spot '))o.position.y=o.userData.room==='salao'?2.03:2.78;if(n.includes('pendente '))o.position.y=2.35;if(n.includes('TV menu'))o.position.y=2.42;if(n.includes('TV salão'))o.position.y=1.85;if(n.includes('espelho horizontal'))o.position.y=1.55;if(n.includes('painel de lambris'))o.position.y=.7;if(n.includes('tampo branco'))o.position.y=n.includes('3')?1.235:1.04;if(n.includes('expositor cookies'))o.position.y=1.22;if(n.includes('janela com caixilho'))o.position.y=1.45;if(n.includes('corrimão deck'))o.position.y=1.05;if(n.includes('viga pergolado'))o.position.y=2.68;if(n.includes('montante guarda-corpo'))o.position.y=.5;if(n.includes('ralo linear'))o.position.y=.02;}}
-function setVersion(){const heatMode=document.getElementById('version').value==='heat';for(const o of objects){const n=o.userData.name;if(n.startsWith('THE HEAT ·'))o.visible=heatMode;else if(n.startsWith('BORELLI ·')||n.includes('original Borelli')||n.includes('Expositor Borelli'))o.visible=!heatMode;}}
+function setVersion(){applyVisibility()}
+
+
+/* BETA 2: elementos procedurais detalhados — referências fotográficas, escala ilustrativa.
+   Objetos da estrutura não são alterados; decoração e cobertura são independentes. */
+const detailMeshes=[],roofMeshes=[],cutawayMeshes=[];
+function mat(c,metal=0,rough=.7,transparent=false,opacity=1){return new THREE.MeshStandardMaterial({color:c,metalness:metal,roughness:rough,transparent,opacity,side:THREE.DoubleSide})}
+const steel=mat('#23272b',.68,.32),red=mat('#b81725',.2,.47),white=mat('#f7f4ee',.08,.62),glass=mat('#b9d7db',.1,.12,true,.38),brick=mat('#b16a49',0,.96),wood=mat('#87664d',0,.9),chrome=mat('#9ca6a9',.82,.22),warm=mat('#ffdfb1',0,.4);
+function mesh(g,m,x,y,z,room='deck',roof=false){let o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=!roof;o.receiveShadow=true;o.userData={room,detail:true};scene.add(o);detailMeshes.push(o);if(roof)roofMeshes.push(o);return o}
+function cube(x,y,z,w,h,d,m,room='deck',roof=false){return mesh(new THREE.BoxGeometry(w,h,d),m,x,y,z,room,roof)}
+function cyl(x,y,z,r,h,m,room='deck'){return mesh(new THREE.CylinderGeometry(r,r,h,12),m,x,y,z,room)}
+function line(x1,y1,z1,x2,y2,z2,r,m,room='deck'){const a=new THREE.Vector3(x1,y1,z1),b=new THREE.Vector3(x2,y2,z2),v=b.clone().sub(a);const o=mesh(new THREE.CylinderGeometry(r,r,v.length(),8),m,...a.clone().add(b).multiplyScalar(.5).toArray(),room);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());return o}
+function detailScene(){
+// Deck 19,54 m² — metal preto, placas brancas, travessas, corrimão, mesa e tijolo.
+for(let z=2.15;z<9.4;z+=.55){cube(1.45,2.77,z,2.76,.038,.49,white,'deck',true)}
+cube(1.43,2.79,1.84,2.85,.12,.12,steel,'deck',true);cube(1.43,2.79,9.44,2.85,.12,.12,steel,'deck',true);
+for(let z=2.05;z<9.4;z+=1.35)cube(1.45,2.81,z,2.92,.14,.13,steel,'deck',true);
+cube(2.86,1.42,5.65,.12,2.8,7.65,brick,'deck');
+for(let z=2.2;z<9.3;z+=.21){cube(2.792,1.3,z,.016,.012,.16,mat('#d4a187',0,.9),'deck')}
+for(let z=2.15;z<9.25;z+=.25){cube(.16,.46,z,.025,.92,.025,steel,'deck')}
+cube(.16,.97,5.7,.075,.075,7.4,steel,'deck');cube(.16,.10,5.7,.06,.05,7.4,steel,'deck');
+for(let z=2.9;z<9;z+=1.55){cube(1.18,.77,z,.72,.045,.72,white,'deck');cyl(1.18,.39,z,.052,.72,steel,'deck');cube(1.18,.065,z,.39,.045,.39,steel,'deck')}
+// Wall-mounted window on brick side, dark glazing.
+cube(2.765,1.52,5.6,.038,1.25,2.4,steel,'deck');cube(2.735,1.52,5.6,.026,1.14,2.28,glass,'deck');
+cube(2.73,1.52,5.6,.055,1.25,.035,steel,'deck');
+// Salon: red upholstered banquette with segmented cushions, framed horizontal mirror, white tables.
+for(let x=5.55;x<9.15;x+=.72){cube(x,.46,.55,.69,.44,.5,red,'salao');cube(x,.87,.28,.69,.68,.19,red,'salao')}
+cube(7.25,1.47,.095,3.55,.38,.035,chrome,'salao');
+cube(7.25,1.47,.12,3.48,.32,.025,glass,'salao');
+for(let x=5.9;x<9;x+=1.2){cube(x,.76,1.45,.78,.055,.65,white,'salao');cyl(x,.39,1.45,.05,.72,steel,'salao');cube(x,.055,1.45,.38,.05,.32,steel,'salao');cube(x,.42,2.1,.46,.08,.45,red,'salao');cube(x,.74,2.32,.45,.62,.08,red,'salao')}
+// Service counter: separate plinth, colored panels, worktop, lettering using canvas textures.
+for(let i=0;i<3;i++){let x=5.48+i*1.2;cube(x,.07,5.8,1.17,.14,.76,steel,'atendimento');cube(x,i===2?1.225:1.025,5.8,1.19,.06,.8,white,'atendimento');}
+const textFace=(txt,w,h,c)=>{let canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;let ctx=canvas.getContext('2d');ctx.clearRect(0,0,1024,256);ctx.fillStyle=c;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 140px Arial';ctx.fillText(txt,512,135);let t=new THREE.CanvasTexture(canvas);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide})};
+function signage(txt,x,z,y,w,c){const o=mesh(new THREE.PlaneGeometry(w,.28),textFace(txt,w,.28,c),x,y,z,'atendimento');return o}
+signage('RETIRADA',5.48,5.425,.55,1.0,'#ffffff');signage('CAIXA',7.88,5.425,.55,.75,'#ffffff');signage('THE HEAT',6.68,5.425,.55,1.04,'#c71928');
+for(let x of [7.15,8.38]){cube(x,2.46,7.76,1.1,.66,.05,steel,'atendimento');cube(x,2.46,7.725,1.01,.57,.012,mat('#11191c',.1,.23),'atendimento')}
+for(let x of [7.65,8.38]){cube(x,1.1,7.32,.59,1.65,.055,steel,'atendimento');cube(x,1.13,7.285,.49,1.35,.012,glass,'atendimento');for(let y=.65;y<1.8;y+=.25)cube(x,y,7.265,.47,.012,.015,chrome,'atendimento')}
+for(let x of [5.5,6.7,7.9]){let l=new THREE.PointLight(0xffd5a3,.45,3);l.position.set(x,2.48,6.2);scene.add(l);detailMeshes.push(l)}
+// Kitchen: stainless backsplash, metal hood, two exhaust tubes, drainage.
+cube(11.65,1.36,8.26,2.8,1.1,.028,chrome,'cozinha');cube(10.25,1.36,7.43,.028,1.1,1.32,chrome,'cozinha');
+for(let x of [10.9,12.25]){cyl(x,2.73,7.87,.17,.47,chrome,'cozinha');}
+cube(11.68,2.05,7.91,2.7,.055,.83,chrome,'cozinha');
+for(let x=10.45;x<13;x+=.35)cube(x,1.94,7.92,.015,.07,.72,steel,'cozinha');
+cube(11.42,.025,6.4,1.9,.025,.10,chrome,'cozinha');
+}
+detailScene();
+function applyVisibility(){let v=document.getElementById('rooms').value,heatMode=document.getElementById('version').value==='heat',roofOn=document.getElementById('roof').checked,cutaway=document.getElementById('cutaway').checked;
+for(const o of objects){let n=o.userData.name,vis=v==='all'||o.userData.room===v;if(n.startsWith('THE HEAT ·'))vis=vis&&heatMode;else if(n.startsWith('BORELLI ·')||n.includes('original Borelli')||n.includes('Expositor Borelli'))vis=vis&&!heatMode;o.visible=vis;
+if(o.userData.type==='wall'&&cutaway&&v==='all'&&o.position.y>1.4&&o.userData.room!=='cozinha'){o.scale.y=.62;o.position.y=o.userData.h*.31}else if(o.userData.type==='wall'){o.scale.y=1;o.position.y=o.userData.h/2}
+}
+for(const o of detailMeshes){if(o.isLight){o.visible=heatMode;continue}o.visible=(v==='all'||o.userData.room===v)&&(!roofMeshes.includes(o)||roofOn)&&(!o.userData.room||heatMode||o.userData.room==='deck'||o.userData.room==='cozinha');}
+}
+const focus=(x,y,z,tx,ty,tz)=>{camera.position.set(x,y,z);controls.target.set(tx,ty,tz);controls.maxPolarAngle=Math.PI-.08;controls.update()};
+document.getElementById('deckView').onclick=()=>focus(1.25,1.65,3.1,1.5,1.4,6.2);
+document.getElementById('salonView').onclick=()=>focus(6.0,1.55,2.4,7.7,1.1,.55);
+document.getElementById('counterView').onclick=()=>focus(6.3,1.62,4.2,6.8,1.15,6.4);
+document.getElementById('kitchenView').onclick=()=>focus(11.3,1.7,5.2,11.6,1.5,8);
+document.getElementById('roof').onchange=applyVisibility;
+document.getElementById('cutaway').onchange=applyVisibility;
 
 function add(name,room,type,x,y,z,w,h,d,color){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:type==='floor'?.92:type==='wall'?.86:.62,metalness:type==='furniture'?.22:0}));mesh.position.set(x,y,z);mesh.castShadow=type!=='floor';mesh.receiveShadow=true;mesh.userData={id:++counter,name,room,type,w,h,d};scene.add(mesh);objects.push(mesh);return mesh}
 function init(){defs.forEach(d=>add(...d));}
 function snapshot(){return objects.map(o=>({name:o.userData.name,room:o.userData.room,type:o.userData.type,x:o.position.x,y:o.position.y,z:o.position.z,w:o.userData.w,h:o.userData.h,d:o.userData.d,color:'#'+o.material.color.getHexString(),rotation:o.rotation.y}))}
-function restore(data){if(!Array.isArray(data))throw Error('Formato inválido');objects.forEach(o=>{scene.remove(o);o.geometry.dispose();o.material.dispose()});objects=[];selected=null;counter=0;data.forEach(o=>{if(!o||!['floor','wall','furniture'].includes(o.type))return;let m=add(o.name,o.room,o.type,+o.x,+o.y,+o.z,+o.w,+o.h,+o.d,o.color);m.rotation.y=+o.rotation||0});updateSelected()}
+function restore(data){if(!Array.isArray(data))throw Error('Formato inválido');objects.forEach(o=>{scene.remove(o);o.geometry.dispose();o.material.dispose()});objects=[];selected=null;counter=0;data.forEach(o=>{if(!o||!['floor','wall','furniture'].includes(o.type))return;let m=add(o.name,o.room,o.type,+o.x,+o.y,+o.z,+o.w,+o.h,+o.d,o.color);m.rotation.y=+o.rotation||0});applyVisibility();updateSelected()}
 function updateSelected(){document.getElementById('selectedName').textContent=selected?.userData.name||'Nenhum';document.getElementById('selectedType').textContent=selected?selected.userData.type+' · '+selected.userData.room:'Toque em um móvel ou parede';if(selected){document.getElementById('color').value='#'+selected.material.color.getHexString();document.getElementById('color').disabled=selected.userData.type!=='furniture';document.getElementById('rotate').disabled=selected.userData.type!=='furniture';document.getElementById('delete').disabled=selected.userData.type!=='furniture'}else{document.getElementById('color').disabled=true;document.getElementById('rotate').disabled=true;document.getElementById('delete').disabled=true}}
 function pick(e){const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);return raycaster.intersectObjects(objects).find(i=>i.object.visible&&i.object.userData.type!=='floor')?.object||null}
 let startX=0,startY=0;renderer.domElement.addEventListener('pointerdown',e=>{startX=e.clientX;startY=e.clientY;if(moveMode){const hit=pick(e);if(hit){selected=hit;if(hit.userData.type!=='furniture'||hit.userData.name.startsWith('Pilar')){updateSelected();return}dragging=true;controls.enabled=false;updateSelected();renderer.domElement.setPointerCapture(e.pointerId)}}});
@@ -152,7 +210,7 @@ document.getElementById('color').oninput=e=>{if(selected&&selected.userData.type
 document.getElementById('rotate').onclick=()=>{if(selected&&selected.userData.type==='furniture')selected.rotation.y+=Math.PI/2};
 document.getElementById('delete').onclick=()=>{if(!selected||selected.userData.type!=='furniture')return;scene.remove(selected);objects=objects.filter(o=>o!==selected);selected=null;updateSelected()};
 document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{let n=b.dataset.add,t='furniture';selected=add(n+' '+(++counter),'atendimento',t,5,.5,5,t==='wall'?2:1,t==='wall'?2.7:1,t==='wall'?.12:1,t==='wall'?'#eeeeee':'#d5524c');updateSelected()});
-document.getElementById('rooms').onchange=e=>{let v=e.target.value;objects.forEach(o=>o.visible=v==='all'||o.userData.room===v)};
+document.getElementById('rooms').onchange=e=>{let v=e.target.value;applyVisibility()};
 document.getElementById('save').onclick=()=>{try{localStorage.setItem(STORE,JSON.stringify(snapshot()));alert('Projeto salvo neste navegador. Exporte JSON para manter uma cópia.')}catch(e){alert('Não foi possível salvar: '+e.message)}};
 document.getElementById('load').onclick=()=>{try{const s=localStorage.getItem(STORE);if(!s)return alert('Nenhum projeto salvo neste navegador');restore(JSON.parse(s))}catch(e){alert('Erro ao abrir: '+e.message)}};
 document.getElementById('export').onclick=()=>{const a=document.createElement('a'),blob=new Blob([JSON.stringify({version:1,objects:snapshot()},null,2)],{type:'application/json'});a.href=URL.createObjectURL(blob);a.download='the-heat-projeto.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
