@@ -11,9 +11,10 @@
 <h2>AMBIENTES</h2><select id="rooms"><option value="all">Todos os ambientes</option><option value="atendimento">Atendimento</option><option value="salao">Salão</option><option value="cozinha">Cozinha</option><option value="deck">Deck / pergolado</option><option value="banheiros">Banheiros e circulação</option></select>
 <h2>PROJETO</h2><div class="buttons"><button id="save">Salvar no aparelho</button><button id="load">Abrir projeto</button><button id="export">Exportar JSON</button><button id="reset">Restaurar base</button></div><input type="file" id="file" accept=".json,application/json" hidden>
 <p class="foot">Modelo de estudo, não utilizar para execução de obra. A distribuição segue a planta Borelli de 2021, mas as dimensões e aberturas precisam ser conferidas. O salvamento local depende do navegador; exporte JSON como cópia de segurança.</p></aside></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"}}</script>
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
-import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const view=document.getElementById('view'),err=document.getElementById('error');
 let renderer,scene,camera,controls,raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2(),selected=null,moveMode=false,dragging=false,objects=[],counter=0;
 const STORE='theheat3dstudio-alpha-01';
