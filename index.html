@@ -2,7 +2,7 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>The Heat 3D Studio</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#10151b;color:#f4f5f6;font:14px system-ui,-apple-system,Arial}header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#181f28;border-bottom:1px solid #34404d}h1{font-size:17px;margin:0}h1 span{color:#ff5559}.tag{font-size:11px;color:#f5b8b8;background:#542b31;border-radius:20px;padding:5px 9px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;height:calc(100dvh - 54px)}#view{position:relative;min-width:0;min-height:350px;touch-action:none}canvas{display:block;width:100%;height:100%}.hint{position:absolute;left:12px;top:12px;background:#18212cdb;border-radius:9px;padding:10px;pointer-events:none;max-width:290px;font-size:12px;color:#d4dde8}#error{display:none;position:absolute;inset:20%;background:#342328;color:#fff;padding:18px;border-radius:12px;z-index:5}aside{padding:16px;background:#1a222c;overflow:auto;border-left:1px solid #34404d}h2{font-size:12px;letter-spacing:1.3px;color:#a8b4c4;margin:18px 0 9px}button,select,input{font:inherit}button{background:#303d4b;border:1px solid #526171;border-radius:8px;color:white;padding:10px;cursor:pointer}button:active{background:#a63e42}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wide{width:100%}label{display:block;margin:10px 0 5px;color:#cbd3dd}input[type=color]{width:100%;height:38px;border:0;background:none}input[type=number],select{background:#293441;border:1px solid #526171;border-radius:7px;padding:9px;color:white;width:100%}.small{font-size:12px;color:#aab8c7;line-height:1.5}.selected{background:#26323e;padding:10px;border-radius:8px}.foot{font-size:11px;color:#9faab7;margin-top:18px}a{color:#ff9a9c}@media(max-width:760px){.layout{display:flex;flex-direction:column;height:auto}#view{height:55dvh;min-height:340px}aside{border-left:0;border-top:1px solid #34404d}header{padding:12px}.hint{font-size:11px}}
-</style></head><body><header><h1>THE HEAT <span>3D STUDIO</span></h1><span class="tag">BETA 3.5 · PAREDE E GÁS</span></header>
+</style></head><body><header><h1>THE HEAT <span>3D STUDIO</span></h1><span class="tag">BETA 3.6 · FACHADA MARROM</span></header>
 <div class="layout"><main id="view"><div class="hint">Arraste o fundo para girar · Pinça/roda para zoom · Toque num objeto para selecionar · Modo mover: arraste o objeto</div><div id="error"></div></main>
 <aside><div class="buttons"><button id="iso">Vista 3D</button><button id="top">Planta ↑</button><button id="center">Recentralizar</button><button id="deckView">Entrar no deck</button><button id="salonView">Entrar no salão</button><button id="counterView">Ver balcão</button><button id="kitchenView">Ver cozinha</button><button id="move">Mover: desligado</button></div>
 <h2>VISUALIZAÇÃO</h2><button id="roofToggle" class="wide" type="button" aria-pressed="false">Ocultar telhados e forros</button><label><input id="roof" type="checkbox" checked> Mostrar telhados e forros</label><label><input id="cutaway" type="checkbox" checked> Paredes em corte (visão aérea)</label><h2>PROJETO THE HEAT</h2><p class="small">Versão única editável. Portas, janelas e paredes estruturais permanecem fixas; mobiliário e acabamentos podem ser personalizados.</p><h2>ELEMENTO SELECIONADO</h2><div class="selected"><strong id="selectedName">Nenhum</strong><div id="selectedType" class="small">Toque em um móvel ou parede</div></div>
@@ -154,7 +154,8 @@ function fixedSurface(name,w,h,x,y,z,ry=0,rx=0){
  o.rotation.set(rx,ry,0);o.userData.name=name;o.userData.locked=true;
  return o;
 }
-fixedSurface('Parede existente junto ao gás · 1,50 m',1.50,2.80,gasRight,1.40,gasRear-.75,Math.PI/2);
+const gasWall=fixedSurface('Parede existente junto ao gás · 1,50 m',1.50,2.80,gasRight,1.40,gasRear-.75,Math.PI/2);
+gasWall.material=mat('#ae6a4b',0,.96);
 fixedSurface('Casinha de gás · fundo',1.20,gasHeight,gasRight-.60,.85,gasRear);
 fixedSurface('Casinha de gás · lateral esquerda',1.20,gasHeight,gasRight-1.20,.85,gasRear-.60,Math.PI/2);
 // A parede existente forma o lado direito do abrigo, evitando superfícies sobrepostas.
@@ -186,6 +187,19 @@ function frontGlazing(name,room,zMin,zMax,yMin,yMax){
 }
 frontGlazing('Porta de entrada','salao',.43,2.73,.08,2.22);
 frontGlazing('Janela frontal','atendimento',4.30,6.60,.68,1.93);
+// Complementos de alvenaria solicitados: preservam os vãos existentes.
+// Espessura de 0,15 herdada das paredes da fachada; nenhuma abertura movida.
+const facadeBrown=mat('#ae6a4b',0,.96);
+function facadeFill(name,z1,z2,y1,y2,room){
+ const o=cube(F,(y1+y2)/2,(z1+z2)/2,.15,y2-y1,z2-z1,facadeBrown,room);
+ o.userData.name=name;o.userData.locked=true;return o;
+}
+facadeFill('Fachada marrom · abaixo da janela',4.30,6.60,0,.68,'atendimento');
+facadeFill('Fachada marrom · acima da janela',4.30,6.60,1.93,2.93,'atendimento');
+// Referência de cobertura externa já usada no modelo: 2,80 m.
+// Mantém vidro e caixilho da porta em suas posições atuais.
+facadeFill('Hall · fechamento marrom acima da porta',.43,2.73,2.22,2.80,'salao');
+
 // Piso externo contínuo; estrutura sem divisória artificial.
 for(let z=2.10;z<9.0;z+=1.38){cube(1.55,.76,z,.70,.045,.70,white,'deck');cyl(1.55,.38,z,.052,.70,steel,'deck');cube(1.55,.055,z,.40,.04,.40,steel,'deck')}
 // Coifa em L existente, conforme fotos, sem equipamentos fictícios.
